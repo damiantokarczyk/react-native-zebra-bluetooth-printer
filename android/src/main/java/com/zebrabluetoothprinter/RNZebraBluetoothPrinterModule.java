@@ -156,12 +156,12 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
     } else {
       cancelDiscovery();
       int permissionChecked = ContextCompat.checkSelfPermission(reactContext,
-          android.Manifest.permission.ACCESS_COARSE_LOCATION);
+          android.Manifest.permission.ACCESS_FINE_LOCATION);
    
       if (permissionChecked == PackageManager.PERMISSION_DENIED) {
      
         ActivityCompat.requestPermissions(reactContext.getCurrentActivity(),
-            new String[] { android.Manifest.permission.ACCESS_COARSE_LOCATION }, 1);
+            new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION }, 1);
       }
    
       if (!this.bluetoothAdapter.startDiscovery()) {
