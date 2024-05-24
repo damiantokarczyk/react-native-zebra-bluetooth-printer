@@ -154,23 +154,27 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
     if(this.bluetoothAdapter == null || !this.bluetoothAdapter.isEnabled()) {
       promise.reject("BT NOT ENABLED");
     } else {
+      
       cancelDiscovery();
-      int permissionChecked = ContextCompat.checkSelfPermission(reactContext,
-          android.Manifest.permission.ACCESS_FINE_LOCATION);
-   
-      if (permissionChecked == PackageManager.PERMISSION_DENIED) {
-     
-        ActivityCompat.requestPermissions(reactContext.getCurrentActivity(),
-            new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION }, 1);
-      }
-   
-      if (!this.bluetoothAdapter.startDiscovery()) {
+      promiseMap.put(PROMISE_SCAN, promise);
 
-        promise.reject("DISCOVER", "NOT_STARTED");
-        cancelDiscovery();
-      } else {
-        promiseMap.put(PROMISE_SCAN, promise);
-      }
+      
+      // int permissionChecked = ContextCompat.checkSelfPermission(reactContext,
+      //     android.Manifest.permission.ACCESS_FINE_LOCATION);
+   
+      // if (permissionChecked == PackageManager.PERMISSION_DENIED) {
+     
+      //   ActivityCompat.requestPermissions(reactContext.getCurrentActivity(),
+      //       new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION }, 1);
+      // }
+   
+      // if (!this.bluetoothAdapter.startDiscovery()) {
+
+      //   promise.reject("DISCOVER", "NOT_STARTED");
+      //   cancelDiscovery();
+      // } else {
+      //   promiseMap.put(PROMISE_SCAN, promise);
+      // }
     }
   }
 
