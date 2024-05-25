@@ -317,14 +317,19 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
           } catch (Exception e) {
             // ignore
           }
-          if (!objectFound(deviceFound)) {
-            foundDevice.put(deviceFound);
-            WritableMap params = Arguments.createMap();
-            params.putString("device", deviceFound.toString());
-            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(EVENT_DEVICE_FOUND,
-                params);
-          }
-
+          foundDevice.put(deviceFound);
+          WritableMap params = Arguments.createMap();
+          params.putString("device", deviceFound.toString());
+          reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(EVENT_DEVICE_FOUND,
+              params);
+          //old
+          // if (!objectFound(deviceFound)) {
+          //   foundDevice.put(deviceFound);
+          //   WritableMap params = Arguments.createMap();
+          //   params.putString("device", deviceFound.toString());
+          //   reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(EVENT_DEVICE_FOUND,
+          //       params);
+          // }
         }
       } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
         Promise promise = promiseMap.remove(PROMISE_SCAN);
