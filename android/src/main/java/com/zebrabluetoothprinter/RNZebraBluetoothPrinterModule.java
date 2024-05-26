@@ -333,7 +333,7 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
                 String objAddress = obj.optString("address", "objAddress");
                 String dsAddress = ((JSONObject) foundDevice.get(i)).optString("address", "dsAddress");
                 if (objAddress.equalsIgnoreCase(dsAddress)) {
-                 foundDevice.put(i, deviceFound)
+                 foundDevice.put(i, deviceFound);
                   WritableMap params = Arguments.createMap();
                   params.putString("device", deviceFound.toString());
                   reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(EVENT_DEVICE_FOUND,
