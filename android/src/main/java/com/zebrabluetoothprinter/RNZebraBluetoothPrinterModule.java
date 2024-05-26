@@ -311,7 +311,11 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
           deviceFound.put("name", device.getName());
           deviceFound.put("address", device.getAddress());
           deviceFound.put("class", bluetoothClass.getDeviceClass());
-          deviceFound.put("type", device.getBondState() != BluetoothDevice.BOND_BONDED ? 'unpaired' : 'paired');
+          if(device.getBondState() != BluetoothDevice.BOND_BONDED){
+            deviceFound.put("type", "unpaired");
+          }else{
+            deviceFound.put("type", "paired");
+          }
         } catch (Exception e) {
           // ignore
         }
