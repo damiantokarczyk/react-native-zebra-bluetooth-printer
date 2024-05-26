@@ -311,16 +311,32 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
           deviceFound.put("name", device.getName());
           deviceFound.put("address", device.getAddress());
           deviceFound.put("class", bluetoothClass.getDeviceClass());
-          deviceFound.put("type", device.getBondState() != BluetoothDevice.BOND_BONDED);
+          deviceFound.put("type", device.getBondState() != BluetoothDevice.BOND_BONDED ? 'unpaired' : 'paired');
         } catch (Exception e) {
           // ignore
         }
+      
         if (!objectFound(deviceFound)) {
           foundDevice.put(deviceFound);
           WritableMap params = Arguments.createMap();
           params.putString("device", deviceFound.toString());
           reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(EVENT_DEVICE_FOUND,
               params);
+        }else{
+           for (int i = 0; i < foundDevice.length(); i++) {
+              try {
+                String objAddress = obj.optString("address", "objAddress");
+                String dsAddress = ((JSONObject) foundDevice.get(i)).optString("address", "dsAddress");
+                if (objAddress.equalsIgnoreCase(dsAddress)) {
+                 foundDevice.put(i, deviceFound)
+                  WritableMap params = Arguments.createMap();
+                  params.putString("device", deviceFound.toString());
+                  reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(EVENT_DEVICE_FOUND,
+                      params);
+                }
+              } catch (Exception e) {
+              }
+            }
         }
       } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
         Promise promise = promiseMap.remove(PROMISE_SCAN);
@@ -391,7 +407,6 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
   //     }
   //   }
   // };
-
   private boolean objectFound(JSONObject obj) {
     boolean found = false;
     if (foundDevice.length() > 0) {
