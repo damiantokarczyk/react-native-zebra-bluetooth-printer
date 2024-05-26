@@ -296,7 +296,6 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
       Log.e(TAG,e.getMessage());
     }
   }
-  
   private final BroadcastReceiver discoverReceiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -306,30 +305,22 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
       if (BluetoothDevice.ACTION_FOUND.equals(action)) {
         // Get the BluetoothDevice object from the Intent
         BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-        if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-          JSONObject deviceFound = new JSONObject();
-          try {
-            BluetoothClass bluetoothClass = device.getBluetoothClass();
-            deviceFound.put("name", device.getName());
-            deviceFound.put("address", device.getAddress());
-            deviceFound.put("class", bluetoothClass.getDeviceClass());
-            deviceFound.put("type", "unpaired");
-          } catch (Exception e) {
-            // ignore
-          }
+        JSONObject deviceFound = new JSONObject();
+        try {
+          BluetoothClass bluetoothClass = device.getBluetoothClass();
+          deviceFound.put("name", device.getName());
+          deviceFound.put("address", device.getAddress());
+          deviceFound.put("class", bluetoothClass.getDeviceClass());
+          deviceFound.put("type", device.getBondState() != BluetoothDevice.BOND_BONDED);
+        } catch (Exception e) {
+          // ignore
+        }
+        if (!objectFound(deviceFound)) {
           foundDevice.put(deviceFound);
           WritableMap params = Arguments.createMap();
           params.putString("device", deviceFound.toString());
           reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(EVENT_DEVICE_FOUND,
               params);
-          //old
-          // if (!objectFound(deviceFound)) {
-          //   foundDevice.put(deviceFound);
-          //   WritableMap params = Arguments.createMap();
-          //   params.putString("device", deviceFound.toString());
-          //   reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(EVENT_DEVICE_FOUND,
-          //       params);
-          // }
         }
       } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
         Promise promise = promiseMap.remove(PROMISE_SCAN);
@@ -351,6 +342,55 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
       }
     }
   };
+  
+  // private final BroadcastReceiver discoverReceiver = new BroadcastReceiver() {
+  //   @Override
+  //   public void onReceive(Context context, Intent intent) {
+  //     String action = intent.getAction();
+  //     Log.d(TAG, "on receive:" + action);
+  //     // When discovery finds a device
+  //     if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+  //       // Get the BluetoothDevice object from the Intent
+  //       BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+  //       if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+  //         JSONObject deviceFound = new JSONObject();
+  //         try {
+  //           BluetoothClass bluetoothClass = device.getBluetoothClass();
+  //           deviceFound.put("name", device.getName());
+  //           deviceFound.put("address", device.getAddress());
+  //           deviceFound.put("class", bluetoothClass.getDeviceClass());
+  //           deviceFound.put("type", "unpaired");
+  //         } catch (Exception e) {
+  //           // ignore
+  //         }
+  //         if (!objectFound(deviceFound)) {
+  //           foundDevice.put(deviceFound);
+  //           WritableMap params = Arguments.createMap();
+  //           params.putString("device", deviceFound.toString());
+  //           reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(EVENT_DEVICE_FOUND,
+  //               params);
+  //         }
+  //       }
+  //     } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+  //       Promise promise = promiseMap.remove(PROMISE_SCAN);
+  //       if (promise != null) {
+
+  //         JSONObject result = null;
+  //         try {
+  //           result = new JSONObject();
+  //           result.put("found", foundDevice);
+  //           promise.resolve(result.toString());
+  //         } catch (Exception e) {
+  //           // ignore
+  //         }
+  //         WritableMap params = Arguments.createMap();
+  //         params.putString("paired", pairedDeivce.toString());
+  //         params.putString("found", foundDevice.toString());
+  //         emitRNEvent(EVENT_DEVICE_DISCOVER_DONE, params);
+  //       }
+  //     }
+  //   }
+  // };
 
   private boolean objectFound(JSONObject obj) {
     boolean found = false;
