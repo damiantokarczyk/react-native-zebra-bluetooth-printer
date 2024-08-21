@@ -39,7 +39,8 @@ import java.util.List;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.zebra.sdk.comm.BluetoothConnection;                                  // using zebra sdk for print functionality
+import com.zebra.sdk.btleComm.BluetoothLeConnection
+//import com.zebra.sdk.comm.BluetoothConnection;
 import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.printer.PrinterStatus;
 import com.zebra.sdk.comm.ConnectionException;
@@ -479,7 +480,7 @@ public class RNZebraBluetoothPrinterModule extends ReactContextBaseJavaModule im
   public void print(String device, String label,final Promise promise) {            //print functionality for zebra printer
     boolean success = false;
     boolean loading = false;
-    connection = new BluetoothConnection(device);
+    connection = new BluetoothLeConnection(device);
     try {
       loading = true;
       connection.open();
