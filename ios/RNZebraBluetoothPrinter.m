@@ -116,7 +116,7 @@ RCT_EXPORT_METHOD(print:(NSString*)zpl
         size_t len = [szpl length];
         NSData *payload = [NSData dataWithBytes:bytes length:len];
         NSUInteger length = [payload length];
-        NSUInteger chunkSize = 50;
+        NSUInteger chunkSize = 500;
         NSUInteger offset = 0;
         do {
             NSUInteger thisChunkSize = length - offset > chunkSize ? chunkSize : length - offset;
