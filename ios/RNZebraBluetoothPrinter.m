@@ -112,21 +112,18 @@ RCT_EXPORT_METHOD(print:(NSString*)zpl
         self.printResolveBlock=resolve;
         self.printRejectBlock=reject;
         NSString *szpl = [zpl stringByAppendingString:@"\r\n"];
-        const char *bytes = [szpl UTF8String];
-        //size_t len = [szpl length];
-        size_t len = [szpl lengthOfBytesUsingEncoding:4];
-        NSData *payload = [NSData dataWithBytes:bytes length:len];
+        NSData *payload = [szpl dataUsingEncoding:NSUTF8StringEncoding];
         NSUInteger length = [payload length];
-        NSUInteger chunkSize = 50;
+        NSUInteger chunkSize = 20;
         NSUInteger offset = 0;
         do {
             NSUInteger thisChunkSize = length - offset > chunkSize ? chunkSize : length - offset;
-            NSData* chunk = [NSData dataWithBytesNoCopy:(char *)[payload bytes] + offset  
-                            length:thisChunkSize  freeWhenDone:NO];
-                            offset += thisChunkSize;
+            NSData *chunk = [payload subdataWithRange:NSMakeRange(offset, thisChunkSize)];
+            offset += thisChunkSize;
             [self.printer writeValue:chunk forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
+        
         } while (offset < length);
-        printCompleted = YES; 
+        printCompleted = YES;   
     }
 }
 
