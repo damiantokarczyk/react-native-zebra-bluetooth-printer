@@ -101,29 +101,58 @@ RCT_EXPORT_METHOD(print:(NSString*)zpl
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
     NSLog(@"print called %@",_writeCharacteristic);
-    NSLog(@"print calles %@",_printer);
-    if (!_writeCharacteristic  && !_printer ){
-        NSLog(@"print error");  
+    NSLog(@"print called %@",_printer);
+    
+    if (!_writeCharacteristic && !_printer) {
+        NSLog(@"print error");
         resolve(@"false");
         self.printResolveBlock = nil;
-        self.printRejectBlock=nil;
-        printCompleted= NO;
+        self.printRejectBlock = nil;
+        printCompleted = NO;
     } else {
-        self.printResolveBlock=resolve;
-        self.printRejectBlock=reject;
+        self.printResolveBlock = resolve;
+        self.printRejectBlock = reject;
         NSString *szpl = [zpl stringByAppendingString:@"\r\n"];
         NSData *payload = [szpl dataUsingEncoding:NSUTF8StringEncoding];
         NSUInteger length = [payload length];
-        NSUInteger chunkSize = 20;
+        NSUInteger chunkSize = 20;  // Maksymalny rozmiar fragmentu dla BLE
         NSUInteger offset = 0;
+        NSUInteger lengthOfUtf8Char(unsigned char byte) {
+            if ((byte & 0x80) == 0x00) {
+                return 1;  // 1 bajtowy znak (ASCII)
+            } else if ((byte & 0xE0) == 0xC0) {
+                return 2;  // 2 bajtowy znak
+            } else if ((byte & 0xF0) == 0xE0) {
+                return 3;  // 3 bajtowy znak
+            } else if ((byte & 0xF8) == 0xF0) {
+                return 4;  // 4 bajtowy znak
+            }
+            return 1;  
+        }
         do {
             NSUInteger thisChunkSize = length - offset > chunkSize ? chunkSize : length - offset;
+            if (thisChunkSize > 1) {
+                const unsigned char *bytes = [payload bytes];
+                for (NSInteger i = (NSInteger)(thisChunkSize - 1); i >= 0; i--) {
+                    unsigned char currentByte = bytes[potentialEnd - 1];
+                    if ((currentByte & 0xC0) == 0x80) {
+                        thisChunkSize--;
+                    } else {
+                        NSUInteger charLen = lengthOfUtf8Char(currentByte);
+                        if (potentialEnd - offset >= charLen) {
+                            break;
+                        } else {
+                            thisChunkSize--;
+                        }
+                    }
+                }
+            }
             NSData *chunk = [payload subdataWithRange:NSMakeRange(offset, thisChunkSize)];
             offset += thisChunkSize;
             [self.printer writeValue:chunk forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
-        
+
         } while (offset < length);
-        printCompleted = YES;   
+        printCompleted = YES;
     }
 }
 
