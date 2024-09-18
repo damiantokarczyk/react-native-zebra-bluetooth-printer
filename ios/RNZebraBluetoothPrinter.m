@@ -110,49 +110,23 @@ RCT_EXPORT_METHOD(print:(NSString*)zpl
         self.printRejectBlock = nil;
         printCompleted = NO;
     } else {
-        self.printResolveBlock = resolve;
-        self.printRejectBlock = reject;
-
-
-    NSString *szpl = [zpl stringByAppendingString:@"\r\n"];
-
-
-    NSStringEncoding encoding = CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingWindowsLatin2);
-    NSData *payload = [szpl dataUsingEncoding:encoding];
-
-
-    NSUInteger length = [payload length];
-
-
-    NSUInteger chunkSize = 20;
-    NSUInteger offset = 0;
-
-
-    while (offset < length) {
-
-        NSUInteger thisChunkSize = MIN(chunkSize, length - offset);
-
-
-        NSData *chunk = [payload subdataWithRange:NSMakeRange(offset, thisChunkSize)];
-        
-
-        offset += thisChunkSize;
-
-
-        const unsigned char *chunkBytes = [chunk bytes];
-        NSMutableString *byteArrayString = [NSMutableString stringWithString:@"["];
-        for (NSUInteger i = 0; i < chunk.length; i++) {
-            [byteArrayString appendFormat:@"0x%02x", chunkBytes[i]];
-            if (i < chunk.length - 1) {
-                [byteArrayString appendString:@", "];
-            }
-        }
-        [byteArrayString appendString:@"]"];
-        NSLog(@"Chunk data: %@", byteArrayString);
-
-        [self.printer writeValue:chunk forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
-    }
-    printCompleted = YES;
+        self.printResolveBlock=resolve;
+        self.printRejectBlock=reject;
+        NSString *szpl = [zpl stringByAppendingString:@"\r\n"];
+        const char *bytes = [szpl UTF8String];
+        size_t len = [szpl length];
+        NSData *payload = [NSData dataWithBytes:bytes length:len];
+        NSUInteger length = [payload length];
+        NSUInteger chunkSize = 50;
+        NSUInteger offset = 0;
+        do {
+            NSUInteger thisChunkSize = length - offset > chunkSize ? chunkSize : length - offset;
+            NSData* chunk = [NSData dataWithBytesNoCopy:(char *)[payload bytes] + offset  
+                            length:thisChunkSize  freeWhenDone:NO];
+                            offset += thisChunkSize;
+            [self.printer writeValue:chunk forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
+        } while (offset < length);
+        printCompleted = YES; 
     }
 }
 
