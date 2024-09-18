@@ -112,27 +112,43 @@ RCT_EXPORT_METHOD(print:(NSString*)zpl
     } else {
         self.printResolveBlock = resolve;
         self.printRejectBlock = reject;
-NSString *szpl = [zpl stringByAppendingString:@"\r\n"];
 
-NSData *payload = [szpl dataUsingEncoding:NSUTF8StringEncoding];
-
-NSUInteger length = [payload length];
-
-NSUInteger chunkSize = 20;
-NSUInteger offset = 0;
-
-do {
-    NSUInteger thisChunkSize = MIN(chunkSize, length - offset);
+        NSString *szpl = [zpl stringByAppendingString:@"\r\n"];
     
-    NSData *chunk = [payload subdataWithRange:NSMakeRange(offset, thisChunkSize)];
+
+        NSData *payload = [szpl dataUsingEncoding:NSUTF8StringEncoding];
     
-    offset += thisChunkSize;
 
-    [self.printer writeValue:chunk forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
+        NSUInteger length = [payload length];
+    
 
-} while (offset < length);
+        NSUInteger chunkSize = 20;
+        NSUInteger offset = 0;
+    
 
-printCompleted = YES;
+        while (offset < length) {
+
+            NSUInteger thisChunkSize = MIN(chunkSize, length - offset);
+            
+
+
+            while (thisChunkSize > 0 && (offset + thisChunkSize < length) &&
+                   ([payload bytes][offset + thisChunkSize] & 0xC0) == 0x80) {
+                thisChunkSize--;
+            }
+            
+
+            NSData *chunk = [payload subdataWithRange:NSMakeRange(offset, thisChunkSize)];
+    
+
+            offset += thisChunkSize;
+    
+
+            [self.printer writeValue:chunk forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
+        }
+    
+
+        printCompleted = YES;
     }
 }
 
