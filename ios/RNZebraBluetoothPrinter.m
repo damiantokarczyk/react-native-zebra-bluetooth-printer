@@ -111,21 +111,40 @@ RCT_EXPORT_METHOD(print:(NSString*)zpl
     } else {
         self.printResolveBlock=resolve;
         self.printRejectBlock=reject;
-        NSString *szpl = [zpl stringByAppendingString:@"\r\n"];
-        const char *bytes = [szpl UTF8String];
-        size_t len = [szpl length];
-        NSData *payload = [NSData dataWithBytes:bytes length:len];
-        NSUInteger length = [payload length];
-        NSUInteger chunkSize = 50;
-        NSUInteger offset = 0;
-        do {
-            NSUInteger thisChunkSize = length - offset > chunkSize ? chunkSize : length - offset;
-            NSData* chunk = [NSData dataWithBytesNoCopy:(char *)[payload bytes] + offset  
-                            length:thisChunkSize  freeWhenDone:NO];
-                            offset += thisChunkSize;
-            [self.printer writeValue:chunk forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
-        } while (offset < length);
-        printCompleted = YES; 
+
+    NSString *szpl = [zpl stringByAppendingString:@"\r\n"];
+
+    NSData *payload = [szpl dataUsingEncoding:NSUTF8StringEncoding];
+    const uint8_t *bytes = [payload bytes];
+    NSUInteger length = [payload length];
+
+    NSUInteger chunkSize = 20; 
+    NSUInteger offset = 0;
+
+    while (offset < length) {
+        NSUInteger thisChunkSize = MIN(chunkSize, length - offset);
+        
+        while (thisChunkSize > 0 && (bytes[offset + thisChunkSize - 1] & 0xC0) == 0x80) {
+            thisChunkSize--;
+        }
+
+        NSData *chunk = [NSData dataWithBytes:bytes + offset length:thisChunkSize];
+        offset += thisChunkSize;
+
+        NSMutableString *byteArrayString = [NSMutableString stringWithString:@"["];
+        for (NSUInteger i = 0; i < thisChunkSize; i++) {
+            [byteArrayString appendFormat:@"0x%02x", bytes[offset - thisChunkSize + i]];
+            if (i < thisChunkSize - 1) {
+                [byteArrayString appendString:@", "];
+            }
+        }
+        [byteArrayString appendString:@"]"];
+        NSLog(@"Chunk data: %@", byteArrayString);
+
+        [self.printer writeValue:chunk forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
+    }
+
+    printCompleted = YES;
     }
 }
 
